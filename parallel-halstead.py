@@ -1,0 +1,417 @@
+#!/usr/bin/ python
+
+#Copyright (c) 2022 Gabriella Andrade
+
+# This script measure a set of Halstead's measures:
+n1 = 0 # n1: Number of operators
+n2 = 0 # n2: Number of operands
+N1 = 0 # N1: Total occurrences of operators
+N2 = 0 # N2: Total occurrences of operands
+N = 0.0 # N: Program length (Tokens of Code)
+n = 0.0 # n: Program vocabulary
+V = 0.0 # V: Program volume
+D = 0.0 # D: Program difficulty
+E = 0.0 # E: Development effort
+T = 0.0 # T: Development time (in seconds)
+
+# Comment
+oneLine = "//"
+startComment = "/*"
+endComment = "*/"
+blockComment = False
+
+# C/C++ operators
+c_cpp_operators = ['+=', '-=', '/=', '*=', '%=', '>>=', '<<=', '&=', '^=', '|=', '++', '--', '==', '!=',  '>=', '<=', '<=>', '!', '&&', '||', '<<', '>>', '::', '->', '.*', '->*', '?:', '=', '>', '<', '+', '-', '*', '/', '%', '?', ',', ';', '&', '|', '^', '~',  '(', ')', '{', '}', '[', ']', ':', '#', '->', '.', '\"', '\'']
+
+# C/C++ keywords
+c_cpp_keywords = ["auto", "break", "case", "char",  "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed", "sizeof", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto", "bitand", "bitor", "bool", "catch", "char", "char8_t", "char16_t", "char32_t", "class", "compl", "concept", "consteval", "constexpr", "constinit", "const_cast", "const", "co_await", "co_return", "co_yield", "decltype", "delete", "dynamic_cast", "enum", "explicit", "export", "extern", "false", "friend", "inline", "mutable", "namespace", "new", "noexcept", "not_eq", "nullptr", "operator", "or_eq", "or", "private", "protected", "public", "reflexpr", "register", "reinterpret_cast", "requires", "short", "signed", "sizeof", "static_assert", "static_cast", "static", "synchronized", "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "volatile", "wchar_t", "xor", "xor_eq", "final", "override", "transaction_safe", "transaction_safe_dynamic", "import", "export", "module", "elif", "else", "endif", "ifdef", "ifndef", "define", "undef", "include", "line", "error", "pragma", "defined", "__has_include", "__has_cpp_attribute", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Decimal128", "_Decimal32", "_Decimal64", "_Generic", "_Imaginary", "_Noreturn", "_Static_assert", "_Thread_local", "std", "sizeof", "reinterpret_cast", "typeid", "throw", "cout", "std", "eof", "iostream", "fstream", "get", "close", "argc", "argv", "hpp",  "endl", "string", "size_type", "find_last_of", "vector", "setNumThreads", "unique_ptr", "shared_ptr", "weak_ptr", "push_back", "emplace_back", "make_unique", "make_unique_for_overwrite", "move", "empty", "NULL", "merge", "substr"]
+
+# libraries:
+# OpenCV library keywords
+opencv_keywords = ["cv", "opencv2", "opencv", "VideoCapture", "VideoWriter", "~VideoCapture", "getBackendName", "get", "grab", "core", "isOpened", "findHomography", "RANSAC", "UMat", "Mat", "read", "release", "retrive", "OutputArray", "set", "log", "imgproc", "highgui", "cvtColor", "imshow", "imgproc","saturate_cast", "addWeighted", "type" , "width", "height", "zeros" "CV_CAP_PROP_FRAME_COUNT", "CV_CAP_PROP_FRAME_WIDTH", "CV_CAP_PROP_FOURCC", "CV_CAP_PROP_FRAME_HEIGHT", "CV_CAP_PROP_FRAME_COUNT", "findHomography", "RANSAC", "cvtColor", "Size", "GaussianBlur", "Canny",  "saturate_cast", "Sobel", "split", "type", "width", "open"]
+
+# list to count the operators
+total_operators = []
+count_operators = []
+
+# list to count the operands
+total_operands = []
+count_operands = []
+
+# Parallel programming applications
+api = ''
+
+# SPar keywords
+spar_keywords = ["Input", "Output", "Replicate", "spar", "Stage", "ToStream"]
+
+# Threading Building Blocks keywords
+tbb_keywords = ["tbb", "filter", "serial_out_of_order", "serial_in_order", "parallel", "pipeline", "add_filter", "run", "task_scheduler_init", "init", "operator", "clear"]
+
+# FastFlow keywords
+ff_keywords = ["ff", "ff_node", "ff_node_t", "ff_minode", "ff_monode", "ff_send_out", "farm", "pipe", "pipeline", "freezing", "run_then_freeze", "ff_Pipe", "ff_Farm", "ff_OFarm", "run_and_wait_end", "setEmitter", "setEmitterF", "setCollector", "setCollectorF", "set_scheduling_ondemand", "remove_collector", "GO_ON", "GO_OUT", "EOS_NOFREEZE", "EOS", "run_then_freeze"]
+
+# source code
+fileList = [] 
+
+import sys
+import argparse
+import math
+import re
+
+# analyzes a line to identify commented lines
+def analyzeLine(args):
+
+	# Open the file and read a line
+	code = open(args.file, "r")
+	line = code.readline()
+	while(line):
+
+		i = line.find(oneLine)
+		j = line.find(startComment)
+		
+		# Commented line
+		if i != -1: 
+			fileList.append(line[:i])
+			line = code.readline()
+		# Commented block
+		if j != -1: 
+			blockComment = True
+			# While is a comment block 
+			while(blockComment == True):
+				k = line.find(endComment)
+				if k != -1:
+					fileList.append(line[k+2:-1])
+					blockComment = False
+				line = code.readline()	
+		# Line with no comment		
+		if i == -1 and j == -1:
+			fileList.append(line[:-1])
+			line = code.readline()
+		
+	code.close()
+
+# analyzes a line to identify tab space
+def removeTabs():
+	global fileList
+
+	for i in range(len(fileList)):
+		j = fileList[i].count("\t")
+		if j > 0:
+			fileList[i] = fileList[i].replace("\t", "", j)
+			
+# measures the program length: total number of operators and operands
+def programLength(N1, N2):
+	N = N1 + N2
+	return N
+	
+# measures the vocabulary: total number of unique operator and unique operand
+def programVocabulary(n1, n2):
+	n = n1 + n2
+	return n
+
+# measures the program volume in bits
+def programVolume(N, n):
+	V = N * math.log(n, 2.0)
+	return V
+
+# measures the difficulty to handle the program
+def programDifficulty(n1, n2, N2):
+	D = (n1 / 2) * (N2 / n2) 
+	return D
+
+# measures the development effort
+def developmentEffort(V, D):
+	E = V * D
+	return E
+
+# measures the development time in seconds	
+def developmentTime(E):
+	S = 18
+	T = E/18
+	return T
+		
+#count the number of hexadecimal in the code
+def countHexadecimal(i):
+	global fileList
+	global total_operands
+	global count_operands
+
+	
+	hexad = r'[0][x|X][\da-fA-F]+'
+	
+	numbers = re.findall(hexad, fileList[i])
+	for j in range(len(numbers)):
+		n = str(numbers[j])
+		size = len(n)
+				
+		fileList[i] = fileList[i].replace(n, ' ', 1)
+		try:
+			k = total_operands.index(n)
+			count_operands[k] += 1
+		except:
+			total_operands.append(n)
+			count_operands.append(1)
+	
+#count the number of digits in the code
+def countNumber(i):
+	global fileList
+	global total_operands
+	global count_operands
+
+	
+	hexad = r'0[x|X][\d|a-f*'
+	digit = r'.[-|\d][\d]*[\.|\d*][\d]*.'
+	alphabet = r'[_a-zA-Z]'
+	
+	numbers = re.findall(digit, fileList[i])
+	for j in range(len(numbers)):
+		n = str(numbers[j])
+		size = len(n)
+				
+		if n[0] != alphabet:
+			fileList[i] = fileList[i].replace(n[1:size-1], ' ', 1)
+			try:
+				k = total_operands.index(n[1:size-1])
+				count_operands[k] += 1
+			except:
+				total_operands.append(n[1:size-1])
+				count_operands.append(1)
+	
+#count the number of char and strings in the code
+def countstrings(i):
+	global fileList
+	global total_operands
+	global count_operands
+	global stringsIndex
+		
+	nDouble = fileList[i].count('\"')
+	nSingle = fileList[i].count('\'')
+	s = str(fileList[i])
+	
+	if fileList[i].count("#include") == 0:
+		if nDouble > 0:
+			inicio = 0
+			while nDouble > 0:
+				try:
+					index1 = fileList[i].index('\"', inicio)
+					inicio = index1 + 1
+					index2 = fileList[i].index('\"', inicio)
+					
+					fileList[i] = fileList[i].replace(s[index1+1:index2], ' ', 1)
+					try:
+						k = total_operands.index(s[index1+1:index2])
+						count_operands[k] += 1
+					except:
+						total_operands.append(s[index1+1:index2])
+						count_operands.append(1)
+					nDouble -= 2
+				except:
+					nDouble = 0
+									
+	if fileList[i].count("#include") == 0:
+		if nSingle > 0:
+			inicio = 0
+			while nSingle > 0:
+				try: 
+					index1 = fileList[i].index('\"', inicio)
+					inicio = index1 + 1
+					index2 = fileList[i].index('\"', inicio)
+					
+					fileList[i] = fileList[i].replace(s[index1+1:index2], ' ', 1)
+					try:
+						k = total_operands.index(s[index1+1:index2])
+						count_operands[k] += 1
+					except:
+						total_operands.append(s[index1+1:index2])
+						count_operands.append(1)
+					nSingle -= 2	
+				except:
+					nSingle = 0
+		
+# count the number of operators in the code
+def countOperators(i):
+	global fileList
+	global total_operators
+	global count_operators
+		
+	for operator in c_cpp_operators:
+		j = fileList[i].count(operator)
+		if j > 0:
+			fileList[i] = fileList[i].replace(operator, ' ', j)
+			try:
+				k = total_operators.index(operator)					
+				count_operators[k] += j
+			except:
+				total_operators.append(operator)
+				count_operators.append(j)
+		
+# count the number of C++ keyword in the code
+def countKeyword(i):
+	global fileList
+	global total_operators
+	global count_operators
+	
+	strings = fileList[i].split(" ")
+	for j in range(len(strings)):
+		if strings[j] != '':
+			if strings[j] in c_cpp_keywords:
+				fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+				try:
+					k = total_operators.index(strings[j])
+					count_operators[k] += 1
+				except:
+					total_operators.append(strings[j])
+	
+					count_operators.append(1)
+					
+# count the number of API keyword in the code
+def countApiKeyword(args, i):
+	global fileList
+	global total_operators
+	global count_operators
+
+	strings = fileList[i].split(" ")
+
+	if args.api == "spar":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in spar_keywords:
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
+	if args.api == "tbb":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in tbb_keywords:
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
+
+	if args.api == "fastflow":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in ff_keywords:
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
+
+
+# count the number of operands in the code
+def countOperands(i):
+	global fileList
+	global total_operands
+	global count_operands
+	
+	strings = fileList[i].split(" ")
+	for j in range(len(strings)):
+		if strings[j] != '':
+			fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+			
+			try:
+				k = total_operands.index(strings[j])
+				count_operands[k] += 1
+			except:
+				total_operands.append(strings[j])
+				count_operands.append(1)
+	
+				
+				
+# count the number of operators and operands in the code				
+def HalsteadMeasures(args):
+
+	global fileList
+	global total_operators
+	global count_operators
+	global total_operands
+	global count_operands
+	global n1, n2, N1, N2, n, N, V, D, E, T
+	
+	for i in range(len(fileList)):
+	
+		#count char and strings
+		countstrings(i)
+	
+		#count hexadecimal
+		countHexadecimal(i)
+		
+		#count variables		
+		countNumber(i)
+
+		# count operators
+		countOperators(i)
+		
+		#count API keywords
+		countApiKeyword(args,i)
+		
+		#count c++ keywords
+		countKeyword(i)
+		
+		#count c++ operands
+		countOperands(i)
+	
+	n1 = len(total_operators)
+	n2 = len(total_operands)
+	N1 = sum(count_operators)
+	N2 = sum(count_operands)
+	N = programLength(N1, N2)
+	n = programVocabulary(n1, n2)
+	V = programVolume(N, n)
+	D = programDifficulty(n1, n2, N2)
+	E = developmentEffort(V, D)
+	T = developmentTime(E)	
+	
+
+def printCodeMetrics(args):
+
+	print("Parallel Coding Metrics Results: ")
+	print("Number of operators = ", n1)
+	print("Number of operands = ", n2)
+	print("Total occurrences of operators = ", N1)
+	print("Total occurrences of operands = ", N2)
+	print("Tokens of Code = Program length = ", N)
+	print("Program vocabulary = ", n)
+	print("Program volume = ", V)
+	print("Program difficulty = ", D)
+	print("Development effort = ", E)
+	print("Development time (in seconds) = ", T)
+	print("Development time (in hours) = ", (T/60)/60)
+
+
+def main():
+	global c_cpp_keywords 
+	c_cpp_keywords = c_cpp_keywords + opencv_keywords 
+
+	parser = argparse.ArgumentParser(description='Parallel Coding Metrics')
+	
+	parser.add_argument('file', help = 'Please enter the code name')
+	parser.add_argument('--api', required = True, help = "Please, inform the metric: spar, fastflow, or tbb" )
+		
+	args = parser.parse_args() 
+	
+	
+	analyzeLine(args)
+	removeTabs()
+	HalsteadMeasures(args)
+	printCodeMetrics(args)
+		
+	return 0
+	
+if __name__ == '__main__':
+	sys.exit(main())
+	
+	
