@@ -19,7 +19,6 @@ The currently version allows the analysis of C++ code parallelized using the fol
 
 - Intel TBB
 - FastFlow 
-- GrPPI
 - SPar
 
 ## How to install:
@@ -33,6 +32,8 @@ Python package is required to use PHalstead
 ## How to run:
 
 `python3 parallel-halstead.py --api API file.cpp` 
+
+Ex: `python3 parallel-halstead.py --api spar src/spar_video.cpp`
 
 or
 
