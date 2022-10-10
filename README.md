@@ -19,6 +19,7 @@ The currently version allows the analysis of C++ code parallelized using the fol
 
 - Intel TBB
 - FastFlow 
+- GrPPI
 - SPar
 
 ## How to install:
