@@ -52,6 +52,9 @@ tbb_keywords = ["tbb", "filter", "serial_out_of_order", "serial_in_order", "para
 # FastFlow keywords
 ff_keywords = ["ff_node_t", "ff_node", "ff_minode", "ff_monode", "ff_send_out", "ff_Pipe", "ff_Farm", "ff_OFarm", "ff", "farm", "pipeline", "pipe", "freezing", "run_then_freeze",  "run_and_wait_end", "setEmitterF", "setEmitter", "setCollectorF", "setCollector",  "set_scheduling_ondemand", "remove_collector", "GO_ON", "GO_OUT", "EOS_NOFREEZE", "EOS", "run_then_freeze"]
 
+# GrPPI keywords
+grppi_keywords = ["dynamic_execution","set_queue_attributes","blocking","grppi","farm","pipeline","parallel_execution_tbb","parallel_execution_ff","parallel_execution_omp","parallel_execution_native","queue_mode","blocking"]
+
 # source code
 fileList = [] 
 
@@ -311,7 +314,18 @@ def countApiKeyword(args, i):
 						total_operators.append(strings[j])
 		
 						count_operators.append(1)
-
+	if args.api == "grppi":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in grppi_keywords:
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
 
 # count the number of operands in the code
 def countOperands(i):
@@ -401,7 +415,7 @@ def main():
 	parser = argparse.ArgumentParser(description='Parallel Coding Metrics')
 	
 	parser.add_argument('file', help = 'Please enter the code name')
-	parser.add_argument('--api', required = True, help = "Please, inform the metric: spar, fastflow, or tbb" )
+	parser.add_argument('--api', required = True, help = "Please, inform the metric: fastflow, grppi, spar, or tbb" )
 		
 	args = parser.parse_args() 
 	
