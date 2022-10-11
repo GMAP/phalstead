@@ -458,17 +458,17 @@ def HalsteadMeasures(args):
 def printCodeMetrics(args):
 
 	print("Parallel Coding Metrics Results: ")
-	print("Number of operators = ", n1)
-	print("Number of operands = ", n2)
-	print("Total occurrences of operators = ", N1)
-	print("Total occurrences of operands = ", N2)
-	print("Tokens of Code = Program length = ", N)
-	print("Program vocabulary = ", n)
-	print("Program volume = ", V)
-	print("Program difficulty = ", D)
-	print("Development effort = ", E)
-	print("Development time (in seconds) = ", T)
-	print("Development time (in hours) = ", (T/60)/60)
+	print(f'Number of operators = {n1:.2f}')
+	print(f'Number of operands = {n2:.2f}')
+	print(f'Total occurrences of operators = {N1:.2f}')
+	print(f'Total occurrences of operands = {N2:.2f}')
+	print(f'Tokens of Code = Program length {N:.2f}')
+	print(f'Program vocabulary = {n:.2f}')
+	print(f'Program volume = {V:.2f}')
+	print(f'Program difficulty = {D:.2f}')
+	print(f'Development effort = {E:.2f}')
+	print(f'Development time (in seconds) = {T:.2f}')
+	print(f'Development time (in hours) = {((T/60)/60):.2f}')
 
 
 def main():
