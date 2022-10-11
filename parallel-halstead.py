@@ -28,6 +28,11 @@ c_cpp_operators = ['+=', '-=', '/=', '*=', '%=', '>>=', '<<=', '&=', '^=', '|=',
 
 c_cpp_keywords = ['_Alignas', '_Alignof', '_Atomic', '_Bool', '_Complex', '_Decimal128', '_Decimal32', '_Decimal64', '_Generic', '_Imaginary', '_Noreturn', '_Pragma', '_Static_assert', '_Thread_local', 'alignas', 'alignof', 'and', 'and_eq', 'asm', 'atomic_cancel', 'atomic_commit', 'atomic_noexcept', 'auto', 'bitand', 'bitor', 'bool', 'break', 'case', 'catch', 'char', 'char16_t', 'char32_t', 'char8_t', 'class', 'co_await', 'co_return', 'co_yield', 'complex', 'compl', 'concept', 'const_cast',  'consteval', 'constexpr', 'constinit', 'const', 'continue', 'decltype', 'default', 'define', 'delete', 'double', 'do', 'dynamic_cast', 'elif', 'else', 'endif', 'enum', 'error', 'explicit', 'export', 'extern', 'false', 'final', 'float', 'for', 'friend', 'goto', 'ifdef', 'ifndef', 'if',  'imaginary', 'import', 'include', 'inline', 'int', 'line', 'long', 'module', 'mutable', 'namespace', 'new', 'noexcept', 'noreturn', 'not', 'not_eq', 'nullptr', 'operator', 'or', 'or_eq', 'override', 'pragma', 'private', 'protected', 'public', 'reflexpr', 'register', 'reinterpret_cast', 'requires', 'restrict', 'return', 'short', 'signed', 'sizeof', 'static_assert', 'static_cast', 'static', 'struct', 'switch', 'synchronized', 'template', 'this', 'thread_local', 'throw', 'transaction_safe_dynamic', 'transaction_safe', 'true', 'try', 'typedef', 'typeid', 'typename', 'undef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'wchar_t', 'while', 'xor_eq', 'xor']
 
+
+# Java Keywords
+java_keywords = ['abstract', 'continue', 'for', 'new', 'switch', 'assert', 'default', 'goto', 'package', 'synchronized', 'boolean', 'do', 'if', 'private', 'this', 'break', 'double', 'implements', 'protected', 'throw', 'byte', 'else', 'import', 'public', 'throws', 'case', 'enum', 'instanceof', 'return', 'transient', 'catch', 'extends', 'int', 'short', 'try', 'char', 'final', 'interface', 'static', 'void', 'class', 'finally', 'long', 'strictfp', 'volatile', 'const', 'float', 'native', 'super', 'while']
+
+
 # libraries:
 # OpenCV library keywords
 opencv_keywords = ["cv", "opencv2", "opencv", "VideoCapture", "VideoWriter", "~VideoCapture", "getBackendName", "get", "grab", "core", "isOpened", "findHomography", "RANSAC", "UMat", "Mat", "read", "release", "retrive", "OutputArray", "set", "log", "imgproc", "highgui", "cvtColor", "imshow", "imgproc","saturate_cast", "addWeighted", "type" , "width", "height", "zeros" "CV_CAP_PROP_FRAME_COUNT", "CV_CAP_PROP_FRAME_WIDTH", "CV_CAP_PROP_FOURCC", "CV_CAP_PROP_FRAME_HEIGHT", "CV_CAP_PROP_FRAME_COUNT", "findHomography", "RANSAC", "cvtColor", "Size", "GaussianBlur", "Canny",  "saturate_cast", "Sobel", "split", "type", "width", "open"]
@@ -55,6 +60,14 @@ ff_keywords = ["ff_node_t", "ff_node", "ff_minode", "ff_monode", "ff_send_out", 
 # GrPPI keywords
 grppi_keywords = ["dynamic_execution","set_queue_attributes","blocking","grppi","farm","pipeline","parallel_execution_tbb","parallel_execution_ff","parallel_execution_omp","parallel_execution_native","queue_mode","blocking"]
 
+# Flink keywords
+flink_keywords = ["RichSourceFunction", "SourceFunction", "RichMapFunction", "MapFunction", "RichSinkFunction"]
+
+# Storm keywords
+storm_keywords = ["BaseRichSpout", "BaseRichBolt", "BaseBasicBolt"]
+
+
+
 # source code
 fileList = [] 
 
@@ -67,33 +80,41 @@ import re
 def analyzeLine(args):
 
 	# Open the file and read a line
-	code = open(args.file, "r")
-	line = code.readline()
-	while(line):
 
-		i = line.find(oneLine)
-		j = line.find(startComment)
-		
-		# Commented line
-		if i != -1: 
-			fileList.append(line[:i])
-			line = code.readline()
-		# Commented block
-		if j != -1: 
-			blockComment = True
-			# While is a comment block 
-			while(blockComment == True):
-				k = line.find(endComment)
-				if k != -1:
-					fileList.append(line[k+2:-1])
-					blockComment = False
-				line = code.readline()	
-		# Line with no comment		
-		if i == -1 and j == -1:
-			fileList.append(line[:-1])
-			line = code.readline()
-		
-	code.close()
+	try:
+
+
+		code = open(args.file, "r")
+		line = code.readline()
+		while(line):
+
+			i = line.find(oneLine)
+			j = line.find(startComment)
+			
+			# Commented line
+			if i != -1: 
+				fileList.append(line[:i])
+				line = code.readline()
+			# Commented block
+			if j != -1: 
+				blockComment = True
+				# While is a comment block 
+				while(blockComment == True):
+					k = line.find(endComment)
+					if k != -1:
+						fileList.append(line[k+2:-1])
+						blockComment = False
+					line = code.readline()	
+			# Line with no comment		
+			if i == -1 and j == -1:
+				fileList.append(line[:-1])
+				line = code.readline()
+			
+		code.close()
+
+	except:
+		print("File does not exist")
+		sys.exit()
 
 # analyzes a line to identify tab space
 def removeTabs():
@@ -251,23 +272,38 @@ def countOperators(i):
 				count_operators.append(j)
 		
 # count the number of C++ keyword in the code
-def countKeyword(i):
+def countKeyword(args, i):
 	global fileList
 	global total_operators
 	global count_operators
 	
 	strings = fileList[i].split(" ")
-	for j in range(len(strings)):
-		if strings[j] != '':
-			if strings[j] in c_cpp_keywords:
-				fileList[i] = fileList[i].replace(strings[j], ' ', 1)
-				try:
-					k = total_operators.index(strings[j])
-					count_operators[k] += 1
-				except:
-					total_operators.append(strings[j])
-	
-					count_operators.append(1)
+
+	if args.api == "spar" or args.api == "fastflow" or args.api == "tbb" or args.api == "grppi":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in c_cpp_keywords:
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
+
+	if args.api == "flink" or args.api == "storn":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in java_keywords:
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)					
 					
 # count the number of API keyword in the code
 def countApiKeyword(args, i):
@@ -327,6 +363,32 @@ def countApiKeyword(args, i):
 		
 						count_operators.append(1)
 
+	if args.api == "flink":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in flink_keywords:
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
+
+	if args.api == "storm":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in storm_keywords:
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
+
 # count the number of operands in the code
 def countOperands(i):
 	global fileList
@@ -375,7 +437,7 @@ def HalsteadMeasures(args):
 		countApiKeyword(args,i)
 		
 		#count c++ keywords
-		countKeyword(i)
+		countKeyword(args,i)
 		
 		#count c++ operands
 		countOperands(i)
@@ -415,7 +477,7 @@ def main():
 	parser = argparse.ArgumentParser(description='Parallel Coding Metrics')
 	
 	parser.add_argument('file', help = 'Please enter the code name')
-	parser.add_argument('--api', required = True, help = "Please, inform the metric: fastflow, grppi, spar, or tbb" )
+	parser.add_argument('--api', required = True, help = "Please, inform the metric: fastflow, flink, grppi, spar, storm or tbb" )
 		
 	args = parser.parse_args() 
 	
