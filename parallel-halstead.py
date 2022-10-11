@@ -30,6 +30,7 @@ c_cpp_keywords = ['_Alignas', '_Alignof', '_Atomic', '_Bool', '_Complex', '_Deci
 
 
 # Java Keywords
+# Obtainded from: https://docs.oracle.com/javase/tutorial/java/nutsandbolts/_keywords.html
 java_keywords = ['abstract', 'continue', 'for', 'new', 'switch', 'assert', 'default', 'goto', 'package', 'synchronized', 'boolean', 'do', 'if', 'private', 'this', 'break', 'double', 'implements', 'protected', 'throw', 'byte', 'else', 'import', 'public', 'throws', 'case', 'enum', 'instanceof', 'return', 'transient', 'catch', 'extends', 'int', 'short', 'try', 'char', 'final', 'interface', 'static', 'void', 'class', 'finally', 'long', 'strictfp', 'volatile', 'const', 'float', 'native', 'super', 'while']
 
 
@@ -88,7 +89,6 @@ def analyzeLine(args):
 			code = open(value, "r")
 			line = code.readline()
 			while(line):
-
 				i = line.find(oneLine)
 				j = line.find(startComment)
 				
@@ -98,6 +98,7 @@ def analyzeLine(args):
 					line = code.readline()
 				# Commented block
 				if j != -1: 
+					
 					blockComment = True
 					# While is a comment block 
 					while(blockComment == True):
