@@ -1,4 +1,4 @@
-# phalstead
+# PHalstead
 
 PHalstead is a tool to get Halstead's measures in parallel applications. Halstead evaluates applications based on the numbers of operators and operands (tokens) in the code:
 - n1: number of operators 
@@ -19,6 +19,7 @@ The currently version allows the analysis of C++ code parallelized using the fol
 
 - Intel TBB
 - FastFlow 
+- GrPPI
 - SPar
 
 ## How to install:
