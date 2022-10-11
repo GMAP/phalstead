@@ -81,40 +81,41 @@ def analyzeLine(args):
 
 	# Open the file and read a line
 
-	try:
+	for value in args.codes:
+		try:
 
 
-		code = open(args.file, "r")
-		line = code.readline()
-		while(line):
+			code = open(value, "r")
+			line = code.readline()
+			while(line):
 
-			i = line.find(oneLine)
-			j = line.find(startComment)
-			
-			# Commented line
-			if i != -1: 
-				fileList.append(line[:i])
-				line = code.readline()
-			# Commented block
-			if j != -1: 
-				blockComment = True
-				# While is a comment block 
-				while(blockComment == True):
-					k = line.find(endComment)
-					if k != -1:
-						fileList.append(line[k+2:-1])
-						blockComment = False
-					line = code.readline()	
-			# Line with no comment		
-			if i == -1 and j == -1:
-				fileList.append(line[:-1])
-				line = code.readline()
-			
-		code.close()
+				i = line.find(oneLine)
+				j = line.find(startComment)
+				
+				# Commented line
+				if i != -1: 
+					fileList.append(line[:i])
+					line = code.readline()
+				# Commented block
+				if j != -1: 
+					blockComment = True
+					# While is a comment block 
+					while(blockComment == True):
+						k = line.find(endComment)
+						if k != -1:
+							fileList.append(line[k+2:-1])
+							blockComment = False
+						line = code.readline()	
+				# Line with no comment		
+				if i == -1 and j == -1:
+					fileList.append(line[:-1])
+					line = code.readline()
+				
+			code.close()
 
-	except:
-		print("File does not exist")
-		sys.exit()
+		except:
+			print("File does not exist")
+			sys.exit()
 
 # analyzes a line to identify tab space
 def removeTabs():
@@ -476,11 +477,12 @@ def main():
 
 	parser = argparse.ArgumentParser(description='Parallel Coding Metrics')
 	
-	parser.add_argument('file', help = 'Please enter the code name')
-	parser.add_argument('--api', required = True, help = "Please, inform the metric: fastflow, flink, grppi, spar, storm or tbb" )
-		
-	args = parser.parse_args() 
+	parser.add_argument('--api', required = True, type=str, help = "Please, inform the metric: fastflow, flink, grppi, spar, storm or tbb" )
 	
+	parser.add_argument('--file', action='store', dest='codes', type=str, nargs='*', help = 'Please enter the code name. Examples --file spar.cpp')
+	
+
+	args = parser.parse_args() 
 	
 	analyzeLine(args)
 	removeTabs()
