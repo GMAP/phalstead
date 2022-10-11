@@ -22,6 +22,11 @@ The currently version allows the analysis of C++ code parallelized using the fol
 - GrPPI
 - SPar
 
+In addition, the currently version allows the analysis of Java code parallelized using the following parallel programming models:
+
+- Flink
+- Storm
+
 ## How to install:
 
 Python package is required to use PHalstead
