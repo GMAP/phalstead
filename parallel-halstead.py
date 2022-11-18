@@ -92,25 +92,26 @@ def analyzeLine(args):
 				i = line.find(oneLine)
 				j = line.find(startComment)
 				
+				# Line with no comment		
+				if i == -1 and j == -1:
+					fileList.append(line[:-1])
+					line = code.readline()
 				# Commented line
 				if i != -1: 
 					fileList.append(line[:i])
 					line = code.readline()
 				# Commented block
-				if j != -1: 
-					
-					blockComment = True
-					# While is a comment block 
-					while(blockComment == True):
-						k = line.find(endComment)
-						if k != -1:
-							fileList.append(line[k+2:-1])
-							blockComment = False
-						line = code.readline()	
-				# Line with no comment		
-				if i == -1 and j == -1:
-					fileList.append(line[:-1])
-					line = code.readline()
+				else:
+					if j != -1 and line.find("//*") == -1: 
+						blockComment = True
+						# While is a comment block 
+						while(blockComment == True):
+							k = line.find(endComment)   # Procura pelo fim de um bloco de comentários ( */ )
+							if k != -1:
+								fileList.append(line[k+2:-1])
+								blockComment = False
+							line = code.readline()	
+
 				
 			code.close()
 
