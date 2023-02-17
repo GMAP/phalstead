@@ -67,6 +67,41 @@ flink_keywords = ["RichSourceFunction", "SourceFunction", "RichMapFunction", "Ma
 # Storm keywords
 storm_keywords = ["BaseRichSpout", "BaseRichBolt", "BaseBasicBolt"]
 
+# OpenMP keywords
+openmp_keywords = [
+    # Directives
+    "omp", "parallel", "for", "sections", "section", "single", "master", "critical", "atomic", "barrier", 
+    "ordered", "nowait", "flush", "threadprivate", "copyin", "copyprivate", "reduction", "task", "taskyield", 
+    "taskwait", "target", "teams", "distribute", "simd", "declare", "end", "parallel for", "parallel sections", 
+    "end parallel", "end parallel for", "end parallel sections", "end single", "end master", "end critical", 
+    "end atomic", "end barrier", "end ordered", "end declare", "end target", "end teams", "end distribute", 
+    "end simd",
+    
+    # Clauses
+    "private", "firstprivate", "lastprivate", "shared", "default", "none", "reduction", "copyin", "copyprivate", 
+    "nowait", "schedule", "collapse", "ordered", "num_threads", "if", "final", "untied", "mergeable", "thread_limit", 
+    "device", "map", "is_device_ptr", "to", "from", "use_device_ptr", "depend", "priority", "grainsize", "nogroup",
+    
+    # Runtime Functions
+    "omp_set_num_threads", "omp_get_num_threads", "omp_get_thread_num", "omp_get_max_threads", "omp_set_dynamic", 
+    "omp_get_dynamic", "omp_set_nested", "omp_get_nested", "omp_get_wtime", "omp_get_wtick", "omp_in_parallel", 
+    "omp_set_schedule", "omp_get_schedule", "omp_get_thread_limit", "omp_set_max_active_levels", 
+    "omp_get_max_active_levels", "omp_get_level", "omp_get_ancestor_thread_num", "omp_get_team_size", 
+    "omp_get_active_level", "omp_get_thread_limit", "omp_set_default_device", "omp_get_default_device", 
+    "omp_get_num_devices", "omp_get_device_num", "omp_get_num_teams", "omp_get_team_num", "omp_is_initial_device", 
+    "omp_set_affinity_format", "omp_get_affinity_format", "omp_display_affinity"
+]
+
+# Threads keywords
+cppthreads_keywords = ["Threads", "Mutex", "Conditional_Variables",
+	"thread", "mutex", "condition_variable",
+	"lock_guard", "unique_lock", "yield(",
+	"hardware_concurrency(", "joinable(",
+	"join(", "detach(",
+	"lock(", "try_lock(", "unlock(",
+	"condition_variable::wait(", "condition_variable::notify_one(",
+	"condition_variable::notify_all(" 
+	]
 
 
 # source code
@@ -282,7 +317,7 @@ def countKeyword(args, i):
 	
 	strings = fileList[i].split(" ")
 
-	if args.api == "spar" or args.api == "fastflow" or args.api == "tbb" or args.api == "grppi":
+	if args.api == "spar" or args.api == "fastflow" or args.api == "tbb" or args.api == "grppi" or args.api == "openmp" or args.api == "cppthreads":
 		for j in range(len(strings)):
 			if strings[j] != '':
 				if strings[j] in c_cpp_keywords:
@@ -391,7 +426,35 @@ def countApiKeyword(args, i):
 						total_operators.append(strings[j])
 		
 						count_operators.append(1)
-
+	if args.api == "openmp":
+		foundPragma = False
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] != "pragma" and not foundPragma:
+					continue
+				elif strings[j] in openmp_keywords:
+					foundPragma = True  
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
+	if args.api == "cppthreads":
+		for j in range(len(strings)):
+			if strings[j] != '':
+				if strings[j] in cppthreads_keywords:
+					foundPragma = True  
+					fileList[i] = fileList[i].replace(strings[j], ' ', 1)
+					try:
+						k = total_operators.index(strings[j])
+						count_operators[k] += 1
+					except:
+						total_operators.append(strings[j])
+		
+						count_operators.append(1)
 # count the number of operands in the code
 def countOperands(i):
 	global fileList
@@ -475,7 +538,7 @@ def printCodeMetrics(args):
 
 def main():
 	global c_cpp_keywords 
-	c_cpp_keywords = c_cpp_keywords + opencv_keywords 
+	#c_cpp_keywords = c_cpp_keywords  
 
 	parser = argparse.ArgumentParser(description='Parallel Coding Metrics')
 	
@@ -495,6 +558,3 @@ def main():
 	
 if __name__ == '__main__':
 	sys.exit(main())
-	
-	
-
